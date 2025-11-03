@@ -1,0 +1,40 @@
+---
+# Role: compliance
+# Install and run a quick security audit with Lynis
+
+- name: Install Lynis (Ubuntu)
+  apt:
+    name: lynis
+    state: present
+    update_cache: yes
+  when: ansible_facts['os_family'] == 'Debian'
+
+- name: Install Lynis (SUSE)
+  zypper:
+    name: lynis
+    state: present
+  when: ansible_facts['os_family'] == 'Suse'
+
+- name: Create directory for compliance reports
+  file:
+    path: /var/log/compliance
+    state: directory
+    owner: root
+    group: root
+    mode: '0750'
+
+- name: Run Lynis audit (quick)
+  command: lynis audit system --quiet --quick
+  register: lynis_out
+  changed_when: false
+  failed_when: false
+  when: not ansible_check_mode
+
+- name: Save Lynis output
+  copy:
+    dest: /var/log/compliance/lynis_last.txt
+    content: "{{ lynis_out.stdout | default('') }}\n{{ lynis_out.stderr | default('') }}"
+    owner: root
+    group: root
+    mode: '0640'
+  when: not ansible_check_mode
