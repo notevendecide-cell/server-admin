@@ -222,6 +222,34 @@ Post-apply checks:
 - `auditd` running, `journald` persistent, logrotate in place
 - Lynis report saved for review
 
+## Commands used in this session
+
+- Connectivity attempt with inventory file:
+  ```bash
+  ansible -i inventory.ini all -m ping
+  ```
+
+- Localhost test (no SSH):
+  ```bash
+  ansible -i 'localhost,' all -c local -m ping
+  ```
+
+- Dry runs of the playbook on localhost:
+  ```bash
+  ansible-playbook -i 'localhost,' -c local site.yml --check -K
+  ansible-playbook -i 'localhost,' -c local site.yml --check
+  ```
+
+- Verification commands after applying hardening:
+  ```bash
+  grep -E '^(PermitRootLogin|PasswordAuthentication|Port)' /etc/ssh/sshd_config
+  systemctl status ssh --no-pager
+  ufw status verbose
+  tail -n 50 /var/log/unattended-upgrades/unattended-upgrades.log
+  auditctl -s
+  sed -n '1,80p' /var/log/compliance/lynis_last.txt
+  ```
+
 ## Future Scope
 
 - Add OpenSCAP scanning and tailoring
